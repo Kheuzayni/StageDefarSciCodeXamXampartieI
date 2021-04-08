@@ -1,89 +1,113 @@
-const question = document.getElementById('question');
-const choices = Array.from(document.getElementsByClassName('choice-text'));
+const  question  =  document . getElementById ( 'question' ) ;
+ choix  const =  tableau . from ( document . getElementsByClassName ( 'choix-texte' ) ) ;
+const  progressText  =  document . getElementById ( 'progressText' ) ;
+const  scoreText  =  document . getElementById ( 'score' ) ;
+const  progressBarFull  =  document . getElementById ( 'progressBarFull' ) ;
+const  loader  =  document . getElementById ( 'chargeur' ) ;
+ jeu  const =  document . getElementById ( 'jeu' ) ;
+laissez  currentQuestion  =  { } ;
+laissez  acceptingAnswers  =  false ;
+soit  score  =  0 ;
+laissez  questionCounter  =  0 ;
+laissez  availableQuesions  =  [ ] ;
 
-let currentQuestion = {};
-let acceptingAnswers = false;
-let score = 0;
-let questionCounter = 0;
-let availableQuesions = [];
+laissez  questions  =  [ ] ;
 
-let questions = [
-    {
-        question: " Qui signifie Defar Sci?",
-        choice1: "Development Frontend Regular?",
-        choice2: "Entreprise de vente",
-        choice3: "Developpement Enseignement Formation Application Recherche",
-        choice4: "rien",
-        answer: 1,
-    },
-    {
-        
-        question: 'Inside which HTML element do we put the JavaScript??',
-        choice1: '<script>',
-        choice2: '<javascript>',
-        choice3: '<js>',
-        choice4: '<scripting>',
-        answer: 3,
-    },
-    {
-        question:
-            "What is the correct syntax for referring to an external script called 'xxx.js'?",
-        choice1: "<script href='xxx.js'>",
-        choice2: "<script name='xxx.js'>",
-        choice3: "<script src='xxx.js'>",
-        choice4: "<script file='xxx.js'>",
-        answer: 4,
-    },
-    {
-        question: " How do you write 'Hello World' in an alert box?",
-        choice1: "msgBox('Hello World');",
-        choice2: "alertBox('Hello World');",
-        choice3: "msg('Hello World');",
-        choice4: "alert('Hello World');",
-        answer: 5,
-    },
+chercher (
+    «https://opentdb.com/api.php?amount=10&category=9&difficulty=easy&type=multiple»
+)
+    . alors ( ( res )  =>  {
+        retourne  res . json ( ) ;
+    } )
+    . alors ( ( sharedQuestions )  =>  {
+        questions  =  questions chargées . résultats . map ( ( sharedQuestion )  =>  {
+            const  formatéQuestion  =  {
+                question : sharedQuestion . question ,
+            } ;
 
-];
+            const  answerChoices  =  [ ... sharedQuestion . incorrect_answers ] ;
+            formattedQuestion . answer  =  Math . plancher ( Math . aléatoire ( )  *  4 )  +  1 ;
+            answerChoices . épissure (
+                formattedQuestion . réponse  -  1 ,
+                0 ,
+                chargéQuestion . bonne réponse
+            ) ;
 
-//CONSTANTS
-const CORRECT_BONUS = 10;
-const MAX_QUESTIONS = 3;
+            answerChoices . forEach ( ( choix ,  index )  =>  {
+                formattedQuestion [ 'choix'  +  ( index  +  1 ) ]  =  choix ;
+            } ) ;
 
-startGame = () => {
-    questionCounter = 0;
-    score = 0;
-    availableQuesions = [...questions];
-    getNewQuestion();
-};
+            return  formattedQuestion ;
+        } ) ;
 
-getNewQuestion = () => {
-    if (availableQuesions.length === 0 || questionCounter >= MAX_QUESTIONS) {
-        //go to the end page
-        return window.location.assign('/end.html');
+        startGame ( ) ;
+    } )
+    . attraper ( ( err )  =>  {
+        console . erreur ( err ) ;
+    } ) ;
+
+// CONSTANTES
+const  CORRECT_BONUS  =  10 ;
+const  MAX_QUESTIONS  =  3 ;
+
+startGame  =  ( )  =>  {
+    questionCounter  =  0 ;
+    score  =  0 ;
+    availableQuesions  =  [ ... questions ] ;
+    getNewQuestion ( ) ;
+    jeu . classList . remove ( 'caché' ) ;
+    chargeur . classList . add ( 'caché' ) ;
+} ;
+
+getNewQuestion  =  ( )  =>  {
+    if  ( availableQuesions . length  ===  0  ||  questionCounter  > =  MAX_QUESTIONS )  {
+        localStorage . setItem ( 'mostRecentScore' ,  score ) ;
+        // aller à la page de fin
+         fenêtre de retour . emplacement . assign ( '/end.html' ) ;
     }
-    questionCounter++;
-    const questionIndex = Math.floor(Math.random() * availableQuesions.length);
-    currentQuestion = availableQuesions[questionIndex];
-    question.innerText = currentQuestion.question;
+    questionCounter ++ ;
+    progressText . innerText  =  `Question $ { questionCounter } / $ { MAX_QUESTIONS } ` ;
+    // Mettre à jour la barre de progression
+    progressBarFull . le style . width  =  ` $ { ( questionCounter  /  MAX_QUESTIONS )  *  100 } %` ;
 
-    choices.forEach((choice) => {
-        const number = choice.dataset['number'];
-        choice.innerText = currentQuestion['choice' + number];
-    });
+    const  questionIndex  =  Math . floor ( Math . random ( )  *  availableQuesions . length ) ;
+    currentQuestion  =  availableQuesions [ questionIndex ] ;
+    question . innerText  =  currentQuestion . question ;
 
-    availableQuesions.splice(questionIndex, 1);
-    acceptingAnswers = true;
+    choix . forEach ( ( choix )  =>  {
+         nombre  const =  choix . ensemble de données [ 'nombre' ] ;
+        choix . innerText  =  currentQuestion [ 'choix'  +  nombre ] ;
+    } ) ;
+
+    availableQuesions . épissure ( questionIndex ,  1 ) ;
+    acceptingAnswers  =  true ;
+} ;
+
+choix . forEach ( ( choix )  =>  {
+    choix . addEventListener ( 'clic' ,  ( e )  =>  {
+        if  ( ! acceptingAnswers )  return ;
+
+        acceptingAnswers  =  faux ;
+        const  selectedChoice  =  e . cible ;
+        const  selectedAnswer  =  selectedChoice . ensemble de données [ 'nombre' ] ;
+
+        const  classToApply  =
+            selectedAnswer  ==  currentQuestion . réponse ? 'correct' : 'incorrect' ;
+
+        if  ( classToApply  ===  'correct' )  {
+            incrementScore ( CORRECT_BONUS ) ;
+        }
+
+        selectedChoice . parentElement . classList . ajouter ( classToApply ) ;
+
+        setTimeout ( ( )  =>  {
+            selectedChoice . parentElement . classList . supprimer ( classToApply ) ;
+            getNewQuestion ( ) ;
+        } ,  1 000 );
+    } ) ;
+} ) ;
+
+incrementScore  =  ( num )  =>  {
+    score  + =  num ;
+    scoreText . innerText  =  score ;
 };
-
-choices.forEach((choice) => {
-    choice.addEventListener('click', (e) => {
-        if (!acceptingAnswers) return;
-
-        acceptingAnswers = false;
-        const selectedChoice = e.target;
-        const selectedAnswer = selectedChoice.dataset['number'];
-        getNewQuestion();
-    });
-});
-
-startGame();
